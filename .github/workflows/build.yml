@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android 13 APK
 
 on:
   workflow_dispatch:
@@ -20,20 +20,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      # Modify minSdk from 34 to 33 (Android 13)
+      - name: Lower minSdk for Android 13
+        run: |
+          sed -i 's/minSdk = 34/minSdk = 33/g' app/build.gradle.kts
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      # Create a self-signed key and sign the APK
-      - name: Sign APK
-        run: |
-          keytool -genkeypair -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" -storepass android -keypass android
-          $ANDROID_HOME/build-tools/34.0.0/apksigner sign --ks debug.keystore --ks-pass pass:android app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Upload Signed APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HealthConnectExports-Signed-APK
+          name: HealthConnectExports-Android13
           path: app/build/outputs/apk/debug/app-debug.apk
